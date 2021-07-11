@@ -1,65 +1,63 @@
-## A pair of functions that cache the inverse of a matrix
+## This file contains two functions that allow compute and cache of a matrix's inverse
+## * makeCacheMatrix is a factory method return a inverse cacheable matrix
+## * cacheSolve return a cache of matrix inverse if exists; or calculate inverse and cache
 
+## factory method which returns an instance of cacheable object (in the form of a list)
 
-## Creates a special matrix object that can cache its inverse
-makeCacheMatrix <- function( m = matrix() ) {
-  
-  ## Initialize the inverse property
-  i <- NULL
-  
-  ## Method to set the matrix
-  set <- function( matrix ) {
-    m <<- matrix
-    i <<- NULL
+makeCacheMatrix <- function(x = matrix()) {
+  im <- NULL
+  set <- function(y) {
+    x <<- y
+    im <<- NULL
   }
-  
-  ## Method the get the matrix
-  get <- function() {
-    ## Return the matrix
-    m
-  }
-  
-  ## Method to set the inverse of the matrix
-  setInverse <- function(inverse) {
-    i <<- inverse
-  }
-  
-  ## Method to get the inverse of the matrix
-  getInverse <- function() {
-    ## Return the inverse property
-    i
-  }
-  
-  ## Return a list of the methods
+  get <- function() x
+  setInverse <- function(inverse) im <<- (inverse)
+  getInverse <- function() im
   list(set = set, get = get,
        setInverse = setInverse,
        getInverse = getInverse)
 }
 
 
-## Compute the inverse of the special matrix returned by "makeCacheMatrix"
-## above. If the inverse has already been calculated (and the matrix has not
-## changed), then the "cachesolve" should retrieve the inverse from the cache.
+## Method which retrieve a cache copy or calculates and cache the inverse of a matrix if cache of the inverse not available yet 
+
 cacheSolve <- function(x, ...) {
-  
   ## Return a matrix that is the inverse of 'x'
-  m <- x$getInverse()
-  
-  ## Just return the inverse if its already set
-  if( !is.null(m) ) {
+  im <- x$getInverse()
+  if(!is.null(im)) {
     message("getting cached data")
-    return(m)
+    return(im)
   }
-  
-  ## Get the matrix from our object
   data <- x$get()
-  
-  ## Calculate the inverse using matrix multiplication
-  m <- solve(data) %*% data
-  
-  ## Set the inverse to the object
-  x$setInverse(m)
-  
-  ## Return the matrix
-  m
+  im <- solve(data, ...)
+  x$setInverse(im)
+  im
 }
+
+## Sample code for checking correcting of the methods
+
+verifyCacheSolve <- function() {
+  set.seed(31)
+  x <- matrix(rnorm(16, mean=0, sd=1), nrow=4, ncol=4)
+  print(x)
+  m <- makeCacheMatrix(x)
+  im <- cacheSolve(m)
+  print(im)
+  im2 <- cacheSolve(m)
+  print(im2)
+  dot_product <- x %*% im
+  print(dot_product)
+  result <- round(dot_product)
+  print(result)
+  if(identical(result, diag(4))) {
+    print('correctly return identity matrix when dot product')
+  } else {
+    print('wrong! dot product result should be a identity matrix')
+  }
+  if(identical(im, im2)) {
+    print('same inverse matrix returned')
+  } else {
+    print('this should not happen')
+  }
+}
+
